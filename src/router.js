@@ -20,12 +20,16 @@ import MachineSales from '@/views/MachineSales.vue';
 Vue.use(Router);
 
 const requireAuth = () => (to, from, next) => {
-  const isAuth = _.isEmpty(store.state.company);
+  const isAuth = !_.isEmpty(store.state.company);
   if (isAuth) next();
   else next('/');
 }
 
 export default new Router({
+  mode: 'history',
+  scrollBehavior (to, from, savedPosition) {
+    return { x: 0, y: 0 };
+  },
   routes: [
     {
       path: '/',
@@ -36,6 +40,7 @@ export default new Router({
       path: '/company',
       name: 'company',
       component: Root,
+      beforeEnter: requireAuth(),
       redirect: '/company/info',
       children: [
         { path: '/company/sales', component: CompanySales },
@@ -49,6 +54,7 @@ export default new Router({
       path: '/machine',
       name: 'machine',
       component: Root,
+      beforeEnter: requireAuth(),
       redirect: '/machine/info',
       children: [
         { path: '/machine/info', component: MachineInfo },

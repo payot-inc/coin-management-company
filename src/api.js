@@ -46,6 +46,12 @@ export default {
         return axios.delete(path);
     },
 
+    claimMachine(machineId, price, reason) {
+        const path = getPath('/event/machine/:id/claim', { id: machineId })
+
+        return axios.post(path, { amount: price, reason: reason });
+    },
+
     refreshCompany(companyId) {
         const path = getPath('/company/:id', { id: companyId })
 

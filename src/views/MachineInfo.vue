@@ -302,22 +302,17 @@
                     </div>
                 </form>
 
-                <button 
-                    class="ui fluid teal button" 
-                    style="margin-top:30px"  
-                    @click="claimMachine()">
+                <button class="ui fluid teal button" style="margin-top:30px" @click="claimMachine()">
                     입력완료
                 </button>
             </sui-modal-content>
         </sui-modal>
 
-        <sui-modal 
-            size="mini" 
-            :closable="false" 
-            v-model="modal.claimMachine.loading.show">
+        <sui-modal size="mini" :closable="false" v-model="modal.claimMachine.loading.show">
             <sui-modal-content>
                 <sui-icon loading name="spinner">
                 </sui-icon>
+                금액을 투입중입니다.
             </sui-modal-content>
         </sui-modal>
 
@@ -344,14 +339,10 @@
             </sui-modal-content>
 
             <sui-modal-actions>
-                <sui-button 
-                    negative 
-                    @click="modal.deleteMachine.show = false">
+                <sui-button negative @click="modal.deleteMachine.show = false">
                     아니오
                 </sui-button>
-                <sui-button 
-                    positive 
-                    @click="deleteMachine(modal.deleteMachine.machine)">
+                <sui-button positive @click="deleteMachine(modal.deleteMachine.machine)">
                     예
                 </sui-button>
             </sui-modal-actions>
@@ -389,7 +380,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "../api";
 
 export default {
   data() {
@@ -485,7 +476,8 @@ export default {
         .catch(err => {
           // 장비등록 오류시
           const body = err.response.data;
-          console.log(body);
+
+          self.modal.message.show = true;
         });
     },
 
@@ -511,11 +503,8 @@ export default {
       this.modal.claimMachine.loading.show = true;
 
       console.log(machineId, price, reason);
-      axios
-        .post(`/event/machine/${machineId}/claim`, {
-          amount: price,
-          reason: reason
-        })
+      api
+        .claimMachine(machineId, price, reason)
         .then(response => {
           return response.data;
         })
@@ -526,14 +515,15 @@ export default {
         })
         .catch(err => {
           const body = err.response.data;
-
-          console.log(body);
           self.modal.claimMachine.loading.show = false;
+
+          self.modal.message.message = body.error;
+          self.modal.message.show = true;
         });
     },
 
     deleteMachine(machine) {
-        console.log(machine)
+      console.log(machine);
       const self = this;
       const removeTarget = machine;
       this.modal.deleteMachine.show = false;
