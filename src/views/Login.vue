@@ -97,42 +97,12 @@ export default {
     };
   },
   methods: {
-<<<<<<< HEAD
     login() {
       this.$validator.validateAll();
       if (this.errors.any()) {
         this.modal.show = true;
         this.modal.message = '정확히 입력하였는지 확인해 주세요';
         return;
-=======
-      login () {
-          this.$validator.validateAll();
-          if (this.errors.any()) {
-              this.modal.show = true;
-              this.modal.message = '정확히 입력하였는지 확인해 주세요';
-              return;
-          };
-
-          const self = this;
-          this.$store.dispatch('login', { email: this.email, password: this.password })
-            .then(company => {
-                console.log(company);
-                self.$router.push('/company');
-            }).catch(err => {
-                if (!err.response) {
-                    self.modal.message.message = '서버에 접속할 수 없습니다';
-                } else if (err.response.body) {
-                    self.modal.message.message = err.response.body.error;
-                }
-
-                console.log(err);
-
-                self.modal.show = true;
-            });
-      },
-      wrapPayot () {
-          window.open('http://www.payot-inc.com', '_blank')
->>>>>>> e872304c2f858dfb9b2f0315c0312aa5f3d3ee3c
       }
 
       const self = this;
