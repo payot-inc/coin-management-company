@@ -113,23 +113,49 @@
                 </div> <!-- row -->
 
                 <div class="ui right aligned mini basic segment">
-                    <button class="ui big blue button">입력완료</button>
+                    <button @click="addMaintenance" class="ui big blue button">입력완료</button>
                 </div>
 
             </div> <!-- data_box -->
         </div> <!-- section -->
 
+        <sui-modal
+            v-model="modal.show">
+            <sui-modal-content>
+                {{ modal.message }}
+            </sui-modal-content>
+
+            <sui-modal-actions>
+                <sui-button
+                    primary
+                    @click="modal.show = false">
+                    닫기
+                </sui-button>
+            </sui-modal-actions>
+        </sui-modal>
+
     </div>
 </template>
 
 <script>
+import api from '../api';
+
 export default {
   data() {
     return {
       maintenance: {
           targetDate: moment().endOf('month').format('YYYY-MM-DD')
+      },
+      modal: {
+          show: false,
+          message: ''
       }
     };
+  },
+  watch: {
+      'modal.show': function (newValue) {
+          if (!newValue) this.modal.message = '';
+      }
   },
   computed: {
     total() {
@@ -144,8 +170,24 @@ export default {
   },
   methods: {
     addMaintenance() {
+        const self = this;
+        let data = this.maintenance;
+        const company = this.$store.state.company;
+        data.targetDate = moment().endOf('month').format('YYYY-MM-DD');
+        data.companyId = company.id;
+        data.franchiseId = company.franchise.id;
+
         this.maintenance = {};
-        this.maintenance.targetDate = moment().endOf('month').format('YYYY-MM-DD');
+
+        api.updateMaintence(data)
+            .then(response => response.data)
+            .then(data => {
+                self.modal.message = `${moment().format('YYYY년 MM월')} 운영비용이 정상적으로 반영되었습니다`;
+                self.modal.show = true;
+            }).catch(err => {
+                self.modal.message = '알 수 없는 이유로 운영비용을 작성하지 못하였습니다';
+                self.modal.show = true;
+            });
     }
   }
 };

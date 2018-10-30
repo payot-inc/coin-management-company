@@ -34,7 +34,10 @@
                                 <sui-checkbox toggle v-model="m.isService">
                                 </sui-checkbox>
                             </td>
-                            <td><i class="ui circle green icon"></i>동작중</td>
+                            <td>
+                                <i class="ui circle icon" :class="{ green: !isRunningMachine(m.isService), red: isRunningMachine(m.isService) }"></i>
+                                {{ isRunningMachine(m.isService) ? '동작중' : '서비스 가능' }}
+                            </td>
                             <td>
                                 <button class="ui mini violet icon button config_btn" @click="editMachineModal(m)">
                                     <i class="ui cog icon"></i>
@@ -71,7 +74,7 @@
                 <div class="scrolling content">
                     <section class="eq_info">
                         <h5><i class="ui caret square right outline icon"></i>장비 기본정보</h5>
-                        <form class="ui form">
+                        <div class="ui form">
                             <div class="field">
                                 <label>장비명</label>
                                 <sui-input v-model="modal.detail.machine.name">
@@ -120,15 +123,15 @@
                                 <label>MAC ADDRESS</label>
                                 <input type="text" v-model="modal.detail.machine.mac">
                             </div>
-                            <button class="ui fluid blue button" type="submit" @click="updateMachine(modal.detail.machine)">
+                            <button class="ui fluid blue button" type="submit" @click="editMachine(modal.detail.machine)">
                                 장비정보 수정
                             </button>
-                        </form>
+                        </div>
                     </section>
 
                     <section class="pd_signup">
                         <h5><i class="ui caret square right outline icon"></i>상품등록</h5>
-                        <form class="ui form">
+                        <div class="ui form">
                             <div class="field">
                                 <label>상품명</label>
                                 <sui-input placeholder="상품명" v-model="modal.detail.newService.name"></sui-input>
@@ -154,7 +157,7 @@
                                 </div>
                             </div>
                             <button class="ui fluid violet button" type="submit">상품등록</button>
-                        </form>
+                        </div>
                     </section>
 
                     <section class="product_list">
@@ -172,7 +175,7 @@
                                     <th>동작시간</th>
                                     <th>가격</th>
                                     <th>사용상태</th>
-                                    <th>순서</th>
+                                    <!-- <th>순서</th> -->
                                 </tr>
                             </thead>
                             <tbody>
@@ -190,23 +193,23 @@
                                         <sui-checkbox toggle v-model="s.isSales">
                                         </sui-checkbox>
                                     </td>
-                                    <td>
+                                    <!-- <td>
                                         <button class="ui mini black basic icon button">
                                             <i class="chevron up icon"></i>
                                         </button>
                                         <button class="ui mini black basic icon button">
                                             <i class="chevron down icon"></i>
                                         </button>
-                                    </td>
+                                    </td> -->
                                 </tr>
                             </tbody>
                         </table>
 
-                        <div class="list_btns">
+                        <!-- <div class="list_btns">
                             <button class="ui right floated mini black button">
                                 <label><i class="ui box delete icon"></i></label>선택삭제
                             </button>
-                        </div>
+                        </div> -->
                     </section> <!-- product_list -->
 
                 </div>
@@ -221,7 +224,7 @@
             </sui-modal-header>
 
             <sui-modal-content>
-                <form class="ui form">
+                <div class="ui form">
                     <div class="three fields">
                         <div class="field">
                             <label>장비명</label>
@@ -268,7 +271,7 @@
                             <input placeholder="맥어드레스 입력" v-model="modal.addMachine.machine.mac">
                         </div>
                     </div>
-                </form>
+                </div>
             </sui-modal-content>
 
             <sui-modal-actions>
@@ -286,11 +289,11 @@
             </sui-modal-header>
 
             <sui-modal-content>
-                <form class="ui form">
+                <div class="ui form">
                     <div class="field">
                         <label>동전투입</label>
                         <div class="ui right labeled input">
-                            <input type="number" name="weight" placeholder="금액입력">
+                            <input placeholder="금액입력" v-model="modal.claimMachine.price">
                             <div class="ui basic label">원</div>
                         </div>
                     </div>
@@ -300,7 +303,7 @@
                             <input type="text" name="weight" placeholder="예)고장으로 인한 원격투입">
                         </div>
                     </div>
-                </form>
+                </div>
 
                 <button class="ui fluid teal button" style="margin-top:30px" @click="claimMachine()">
                     입력완료
@@ -445,6 +448,14 @@ export default {
     }
   },
   methods: {
+    isRunningMachine(time) {
+        if (!time) return false;
+        
+        if (moment(time) < moment(time)) return false;
+        
+        return true;
+    },
+
     editMachineModal(machine) {
       this.modal.detail.machine = machine;
       this.modal.detail.show = true;
@@ -484,7 +495,9 @@ export default {
     editMachine(machine) {
       this.$store
         .dispatch("updateMachine", machine)
-        .then(response => {})
+        .then(response => {
+            
+        })
         .catch(err => {
           const data = err.response.data;
         });
