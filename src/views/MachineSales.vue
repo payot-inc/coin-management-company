@@ -40,21 +40,21 @@
 </template>
 
 <script>
-import api from "../api";
+import api from '../api';
 
 export default {
   data() {
     return {
       selected: {
-        daily: moment().format("YYYY-MM-DD"),
+        daily: moment().format('YYYY-MM-DD'),
         week: moment()
-          .add(-7, "days")
-          .format("YYYY-MM-DD")
+          .add(-7, 'days')
+          .format('YYYY-MM-DD'),
       },
       data: {
         daily: [],
-        week: []
-      }
+        week: [],
+      },
     };
   },
   mounted() {
@@ -62,71 +62,63 @@ export default {
     this.weekChartData();
   },
   watch: {
-      'selected.daily': function (newValue) {
-          this.dailyChartData();
-      },
-      'selected.week': function (newValue) {
-          this.weekChartData();
-      }
+    'selected.daily': function (newValue) {
+      this.dailyChartData();
+    },
+    'selected.week': function (newValue) {
+      this.weekChartData();
+    },
   },
   computed: {
     updateDailyChartData() {
       let machines = this.$store.state.company.machines;
-      const dailyGroup = _.groupBy(this.data.daily, d => {
-        return moment(d.payAt).format("H");
-      });
+      const dailyGroup = _.groupBy(this.data.daily, d => moment(d.payAt).format('H'));
 
       // 장비명으로 정렬
       machines = _.sortBy(machines, m => m.name);
 
       // 각 장비별 판매목록 추출
-      return machines.map(m => {
-        return {
-          name: m.name,
-          data: _.times(24, time => {
-            const array = dailyGroup[time];
-            if (!array) return [time, 0];
+      return machines.map(m => ({
+        name: m.name,
+        data: _.times(24, (time) => {
+          const array = dailyGroup[time];
+          if (!array) return [time, 0];
 
-            const targetMachine = array.filter(pay => pay.mac === m.mac);
+          const targetMachine = array.filter(pay => pay.mac === m.mac);
 
-            if (_.isEmpty(targetMachine)) return [time, 0];
+          if (_.isEmpty(targetMachine)) return [time, 0];
 
-            return [time, _.sumBy(targetMachine, i => Number(i.amount))];
-          })
-        };
-      });
+          return [time, _.sumBy(targetMachine, i => Number(i.amount))];
+        }),
+      }));
     },
 
     updateWeekChartData() {
       let machines = this.$store.state.company.machines;
-      const weekGroup = _.groupBy(this.data.week, d => {
-        return moment(d.payAt).weekday();
-      });
+      const weekGroup = _.groupBy(this.data.week, d => moment(d.payAt).weekday());
 
       // 장비명으로 정렬
       machines = _.sortBy(machines, m => m.name);
 
       // 각 장비별 판매목록 추출
-      return machines.map(m => {
-        return {
-          name: m.name,
-          data: _.times(7, week => {
-            const weekdayKo = ["일", "월", "화", "수", "목", "금", "토"];
-            const array = weekGroup[week];
-            if (!array) return [weekdayKo[week], 0];
+      return machines.map(m => ({
+        name: m.name,
+        data: _.times(7, (week) => {
+          const weekdayKo = ['일', '월', '화', '수', '목', '금', '토'];
+          const array = weekGroup[week];
+          if (!array) return [weekdayKo[week], 0];
 
-            const targetMachine = array.filter(pay => pay.mac === m.mac);
+          const targetMachine = array.filter(pay => pay.mac === m.mac);
 
-            if (_.isEmpty(targetMachine)) return [weekdayKo[week], 0];
+          if (_.isEmpty(targetMachine)) return [weekdayKo[week], 0];
 
-            return [
-              weekdayKo[week],
-              _.sumBy(targetMachine, i => Number(i.amount))
-            ];
-          })
-        };
-      });
-    }
+          return [
+            weekdayKo[week],
+            _.sumBy(targetMachine, i => Number(i.amount)),
+          ];
+        }),
+      }));
+    },
   },
   methods: {
     getSalesData(start, end) {
@@ -139,13 +131,13 @@ export default {
     dailyChartData() {
       const self = this;
       const start = moment(this.selected.daily)
-        .add(-1, "days")
+        .add(-1, 'days')
         .toDate();
       const end = moment(this.selected.daily)
-        .endOf("day")
+        .endOf('day')
         .toDate();
 
-      this.getSalesData(start, end).then(data => {
+      this.getSalesData(start, end).then((data) => {
         self.data.daily = data;
       });
     },
@@ -153,16 +145,16 @@ export default {
     weekChartData() {
       const self = this;
       const start = moment(this.selected.daily)
-        .add(-1, "week")
+        .add(-1, 'week')
         .toDate();
       const end = moment(this.selected.daily)
-        .endOf("day")
+        .endOf('day')
         .toDate();
 
-      this.getSalesData(start, end).then(data => {
+      this.getSalesData(start, end).then((data) => {
         self.data.week = data;
       });
-    }
-  }
+    },
+  },
 };
 </script>

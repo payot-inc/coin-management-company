@@ -21,9 +21,17 @@
                             <td>
                                 <div class="ui left icon input column">
                                     <i class="lock icon"></i>
-                                    <input type="password" name="password" placeholder="비밀번호">
+                                    <input
+                                      type="password"
+                                      name="password"
+                                      placeholder="비밀번호"
+                                      v-model="password">
                                 </div>
-                                <button class="ui violet button column">비밀번호 변경</button>
+                                <button
+                                  class="ui violet button column"
+                                  @click="modal.password.show = true">
+                                  비밀번호 변경
+                                </button>
                             </td>
                         </tr>
                         <tr>
@@ -65,17 +73,112 @@
                     </tbody>
                 </table>
 
-            </div> <!-- data_box -->
-        </div> <!-- section -->
+            </div>
+        </div>
+
+        <sui-modal
+          size="mini"
+          v-model="modal.password.show">
+
+          <sui-modal-header>
+            비밀번호 변경
+          </sui-modal-header>
+
+          <sui-modal-content>
+            비밀번호를 변경하시겠습니까?
+
+            <sui-input
+              class="fulid"
+              type="password"
+              placeholder="비밀번호 확인"
+              :error="password !== modal.password.requirePassword"
+              v-model="modal.password.requirePassword">
+            </sui-input>
+          </sui-modal-content>
+
+          <sui-modal-actions>
+            <sui-button
+              negative
+              @click="modal.password.show = false">
+              변경 취소
+            </sui-button>
+            <sui-button
+              primary
+              :disabled="password !== modal.password.requirePassword"
+              @click="updatePassword">
+              변경하기
+            </sui-button>
+          </sui-modal-actions>
+        </sui-modal>
+
+        <sui-modal
+          size="mini"
+          v-model="modal.confirm.show">
+
+          <sui-modal-content>
+            {{ modal.confirm.message }}
+          </sui-modal-content>
+
+          <sui-modal-actions>
+            <sui-button
+              @click="modal.confirm.show = false">
+              확인
+            </sui-button>
+          </sui-modal-actions>
+        </sui-modal>
     </div>
 </template>
 
 <script>
+import api from '../api';
+
 export default {
-    data () {
-        return {
-            company: this.$store.state.company
-        }
-    }
-}
+  data() {
+    return {
+      company: this.$store.state.company,
+      password: '',
+      modal: {
+        password: {
+          show: false,
+          requirePassword: '',
+        },
+        confirm: {
+          show: false,
+          message: '',
+        },
+      },
+    };
+  },
+  methods: {
+    updatePassword() {
+      const self = this;
+      const password = this.password;
+
+      if (this.password !== this.modal.password.requirePassword) {
+        self.modal.confirm.message = '입력하신 비밀번호와 다릅니다';
+        self.modal.confirm.show = true;
+        return;
+      }
+
+      this.modal.password.show = false;
+      this.password = '';
+      this.modal.password.requirePassword = '';
+
+      api.updateCompany(this.$store.state.company.id, { password })
+        .then(({ data }) => {
+          self.modal.confirm.message = '비밀번호가 변경되었습니다';
+          self.modal.confirm.show = true;
+        }).catch(({ response }) => {
+          let message;
+
+          if (response) message = '서버에 접속할 수 없습니다';
+          else if (response.status === 422) message = '폼 오류';
+          else message = '알 수 없는 오류가 발생하였습니다';
+
+          self.modal.confirm.message = message;
+          self.modal.confirm.show = true;
+        });
+    },
+  },
+};
 </script>

@@ -23,11 +23,11 @@ const requireAuth = () => (to, from, next) => {
   const isAuth = !_.isEmpty(store.state.company);
   if (isAuth) next();
   else next('/');
-}
+};
 
 export default new Router({
   mode: 'history',
-  scrollBehavior (to, from, savedPosition) {
+  scrollBehavior(to, from, savedPosition) {
     return { x: 0, y: 0 };
   },
   routes: [
@@ -58,13 +58,13 @@ export default new Router({
       redirect: '/machine/info',
       children: [
         { path: '/machine/info', component: MachineInfo },
-        { path: '/machine/sales', component: MachineSales }
+        { path: '/machine/sales', component: MachineSales },
       ],
     },
     {
-      path: "*",
-      name: "NotFound",
-      component: NotFound
-    }
+      path: '*',
+      name: 'NotFound',
+      component: NotFound,
+    },
   ],
 });

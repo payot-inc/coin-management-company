@@ -90,26 +90,26 @@
 
 <script>
 export default {
-  props: ["date", "data"],
+  props: ['date', 'data'],
   computed: {
     printMonth() {
-      return moment(this.date).format("YYYY-MM");
+      return moment(this.date).format('YYYY-MM');
     },
 
     totalWeek() {
       const totalDays = moment(this.date).daysInMonth();
 
       return Math.ceil((this.startWeek() + totalDays) / 7);
-    }
+    },
   },
   methods: {
     startWeek() {
       return moment(this.date)
-        .startOf("month")
+        .startOf('month')
         .weekday();
     },
     printDay(weekIndex, dayIndex) {
-      const day = weekIndex * 7 + dayIndex - this.startWeek() + 1;
+      const day = (weekIndex * 7) + dayIndex - this.startWeek() + 1;
       return day <= 0 || day > moment(this.date).daysInMonth()
         ? -1
         : day;
@@ -117,9 +117,9 @@ export default {
     changeMonth(month) {
       this.calendar.selectedMonth = moment(this.calendar.selectedMonth).add(
         month,
-        "month"
+        'month',
       );
     },
-  }
+  },
 };
 </script>

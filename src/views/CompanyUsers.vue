@@ -40,7 +40,7 @@
                                 </div>
                             </td> -->
                             <td class="number">{{ u.id }}</td>
-                            <td>{{ u.phone }}</td>
+                            <td>{{ bindPhoneNumber(u.phone) }}</td>
                             <td>{{ u.point }} Pt</td>
                             <td>{{ convertTime(u.createdAt) }}</td>
                         </tr>
@@ -133,7 +133,7 @@
 </template>
 
 <script>
-import api from "../api";
+import api from '../api';
 
 export default {
   data() {
@@ -142,21 +142,21 @@ export default {
         addPoint: {
           show: false,
           point: 0,
-          message: ""
+          message: '',
         },
         sms: {
           show: false,
-          message: ''
+          message: '',
         },
         progress: {
-            show: false
+          show: false,
         },
         message: {
-            show: false,
-            message: ''
-        }
+          show: false,
+          message: '',
+        },
       },
-      users: []
+      users: [],
     };
   },
   mounted() {
@@ -165,63 +165,69 @@ export default {
   methods: {
     getUsers() {
       const self = this;
-      api.getCompanyUsers(this.$store.state.company.id).then(response => {
+      api.getCompanyUsers(this.$store.state.company.id).then((response) => {
         self.users = response.data;
       });
     },
 
     addPoint() {
-        const self = this;
-        const companyId = this.$store.state.company.id;
-        const point = this.modal.addPoint.point;
-        const message = this.modal.addPoint.message;
+      const self = this;
+      const companyId = this.$store.state.company.id;
+      const point = this.modal.addPoint.point;
+      const message = this.modal.addPoint.message;
 
-        this.modal.addPoint.show = false;
-        this.modal.addPoint.point = 0;
-        this.modal.addPoint.message = '';
+      this.modal.addPoint.show = false;
+      this.modal.addPoint.point = 0;
+      this.modal.addPoint.message = '';
 
-        this.modal.progress.show = true;
-        api.addPoint(companyId, point)
-            .then(result => {
-                self.getUsers();
+      this.modal.progress.show = true;
+      api.addPoint(companyId, point)
+        .then((result) => {
+          self.getUsers();
 
-                this.modal.progress.show = false;
-            }).catch(err => {
-                this.modal.progress.show = false;
-            })
+          this.modal.progress.show = false;
+        }).catch((err) => {
+          this.modal.progress.show = false;
+        });
     },
 
     sendSMS() {
-        const self = this;
-        const message = this.modal.sms.message;
-        self.modal.sms.message = '';
-        self.modal.sms.show = false;
+      const self = this;
+      const message = this.modal.sms.message;
+      self.modal.sms.message = '';
+      self.modal.sms.show = false;
 
-        self.modal.progress.show = true;
+      self.modal.progress.show = true;
 
-        api.sendSMS(this.$store.state.company.id, message)
-            .then(response => {
-                self.modal.message.message = '정상적으로 메시지를 전송하였습니다';
-                self.modal.message.show = true;
-                self.modal.progress.show = false;
-            }).catch(err => {
-                if (!err.response) {
-                    self.modal.message.message = '서버에 접속할 수 없습니다';
-                } else if (err.response.data) {
-                    console.log(err.response.data);
-                    self.modal.message.message = `[${err.response.data}] 메시지를 전송할 수 없습니다`;
-                } else {
-                    self.modal.message.message = '알 수 없는 오류가 발생하였습니다';
-                }
+      api.sendSMS(this.$store.state.company.id, message)
+        .then((response) => {
+          self.modal.message.message = '정상적으로 메시지를 전송하였습니다';
+          self.modal.message.show = true;
+          self.modal.progress.show = false;
+        }).catch((err) => {
+          if (!err.response) {
+            self.modal.message.message = '서버에 접속할 수 없습니다';
+          } else if (err.response.data) {
+            console.log(err.response.data);
+            self.modal.message.message = `[${err.response.data}] 메시지를 전송할 수 없습니다`;
+          } else {
+            self.modal.message.message = '알 수 없는 오류가 발생하였습니다';
+          }
 
-                self.modal.progress.show = false;
-                self.modal.message.show = true;
-            });
+          self.modal.progress.show = false;
+          self.modal.message.show = true;
+        });
     },
 
     convertTime(time) {
-      return moment(time).format("YYYY-MM-DD");
-    }
-  }
+      return moment(time).format('YYYY-MM-DD');
+    },
+
+    bindPhoneNumber(number) {
+      const numbers = number.split('-');
+
+      return `${numbers[0]}-****-${numbers[2]}`;
+    },
+  },
 };
 </script>

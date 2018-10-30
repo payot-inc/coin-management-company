@@ -31,7 +31,7 @@
                             <td>{{ m.price }} 원</td>
                             <td>7,980,000 원</td>
                             <td>
-                                <sui-checkbox toggle v-model="m.isService">
+                                <sui-checkbox toggle v-model="m.stopTime">
                                 </sui-checkbox>
                             </td>
                             <td>
@@ -88,20 +88,18 @@
                                 </div>
                                 <div class="field">
                                     <label>용량</label>
-                                    <div class="ui right labeled input">
+                                    <div class="ui input">
                                         <input type="text" v-model.number="modal.detail.machine.size">
-                                        <div class="ui basic label">Kg</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="three fields">
                                 <div class="field">
                                     <label>도입시기</label>
-                                    <div class="ui action small input">
-                                        <input type="text" v-model="modal.detail.machine.installAt">
-                                        <button class="ui icon button">
-                                            <i class="calendar alternate outline icon"></i>
-                                        </button>
+                                    <div class="ui small input">
+                                        <input
+                                          type="date"
+                                          v-model="modal.detail.machine.installAt">
                                     </div>
                                 </div>
                                 <div class="field">
@@ -123,8 +121,11 @@
                                 <label>MAC ADDRESS</label>
                                 <input type="text" v-model="modal.detail.machine.mac">
                             </div>
-                            <button class="ui fluid blue button" type="submit" @click="editMachine(modal.detail.machine)">
-                                장비정보 수정
+                            <button
+                              class="ui fluid blue button"
+                              type="submit"
+                              @click="modal.update.show = true">
+                              장비정보 수정
                             </button>
                         </div>
                     </section>
@@ -136,9 +137,9 @@
                                 <label>상품명</label>
                                 <sui-input placeholder="상품명" v-model="modal.detail.newService.name"></sui-input>
                             </div>
-                            <div class="fields">
-                                <div class="eight wide field">
-                                    <label>시간선택</label>
+                            <div class="two fields">
+                                <div class="field">
+                                    <label>서비스 동작시간</label>
                                     <div class="fields">
                                         <div class="eight wide field">
                                             <div class="ui right labeled input">
@@ -148,7 +149,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="eight wide field">
+                                <div class="field">
                                     <label>가격</label>
                                     <div class="ui right labeled input">
                                         <input placeholder="희망하시는 가격을 입력해주세요" v-model="modal.detail.newService.price">
@@ -156,7 +157,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button class="ui fluid violet button" type="submit">상품등록</button>
+                            <button class="ui fluid violet button" type="submit" @click="addService(modal.detail.newService)">상품등록</button>
                         </div>
                     </section>
 
@@ -181,10 +182,13 @@
                             <tbody>
                                 <tr v-for="(s, index) in modal.detail.machine.services" :key="index">
                                     <td class="check">
-                                        <div class="ui fitted checkbox">
+                                      <sui-checkbox
+
+                                        v-model="modal.detail.selected"></sui-checkbox>
+                                        <!-- <div class="ui fitted checkbox">
                                             <input type="checkbox">
                                             <label></label>
-                                        </div>
+                                        </div> -->
                                     </td>
                                     <td>{{ s.name }}</td>
                                     <td>{{ s.runTimeSec }} 초</td>
@@ -205,6 +209,14 @@
                             </tbody>
                         </table>
 
+                        <sui-button
+                          size="mini"
+                          icon="delete"
+                          iconPosition="right"
+                          class="black floated"
+                          @click="deleteService">
+                          삭제하기
+                        </sui-button>
                         <!-- <div class="list_btns">
                             <button class="ui right floated mini black button">
                                 <label><i class="ui box delete icon"></i></label>선택삭제
@@ -231,12 +243,18 @@
                             <input placeholder="장비명을 입력해주세요" v-model="modal.addMachine.machine.name">
                         </div>
                         <div class="field">
-                            <label>대표 서비스 가격</label>
-                            <input placeholder="가격을 입력해주세요" v-model.number="modal.addMachine.machine.serviceAmmount">
+                            <label>표 서비스 가격</label>
+                            <input
+                              placeholder="가격을 입력해주세요"
+                              type="number"
+                              v-model.number="modal.addMachine.machine.serviceAmmount">
                         </div>
                         <div class="field">
                             <label>대표 서비스 동작시간(초)</label>
-                            <input placeholder="동작시간을 입력해주세요" v-model.number="modal.addMachine.machine.serviceRuntimeSec">
+                            <input
+                              placeholder="동작시간을 입력해주세요"
+                              type="number"
+                              v-model.number="modal.addMachine.machine.serviceRuntimeSec">
                         </div>
                     </div>
                     <div class="three fields">
@@ -248,7 +266,7 @@
                         <div class="field">
                             <label>용량</label>
                             <div class="ui right labeled input">
-                                <input placeholder="용량 입력" v-model.number="modal.addMachine.machine.size">
+                                <input type="number" placeholder="용량 입력" v-model.number="modal.addMachine.machine.size">
                                 <div class="ui basic label">Kg</div>
                             </div>
                         </div>
@@ -262,7 +280,7 @@
                         <div class="field">
                             <label>도입가격</label>
                             <div class="ui right labeled input">
-                                <input placeholder="장비가격 입력" v-model.number="modal.addMachine.machine.price">
+                                <input type="number" placeholder="장비가격 입력" v-model.number="modal.addMachine.machine.price">
                                 <div class="ui basic label">원</div>
                             </div>
                         </div>
@@ -350,40 +368,34 @@
                 </sui-button>
             </sui-modal-actions>
         </sui-modal>
-        <section class="conf_modal ui mini modal transition ">
-            <div class="header">
-                정보삭제
-            </div>
-            <div class="content">
-                <p>삭제하시겠습니까</p>
-            </div>
-            <div class="actions">
-                <div class="ui negative button">
-                    아니오
-                </div>
-                <div class="ui positive left labeled icon button">
-                    네
-                    <i class="checkmark icon"></i>
-                </div>
-            </div>
-        </section>
 
-        <section class="check_modal ui mini modal transition">
-            <div class="content">
-                <p>삭제가 완료되었습니다</p>
-            </div>
-            <div class="actions">
-                <div class="ui button">
-                    확인
-                </div>
-            </div>
-        </section>
+        <sui-modal
+          size="mini"
+          v-model="modal.update.show">
 
+          <sui-modal-content>
+            장비 정보를 변경하시겠습니까?
+          </sui-modal-content>
+
+          <sui-modal-actions>
+            <sui-button
+              negative
+              @click="modal.update.show = false">
+              취소
+            </sui-button>
+
+            <sui-button
+              primary
+              @click="editMachine(modal.detail.machine)">
+              변경하기
+            </sui-button>
+          </sui-modal-actions>
+        </sui-modal>
     </div>
 </template>
 
 <script>
-import api from "../api";
+import api from '../api';
 
 export default {
   data() {
@@ -391,75 +403,81 @@ export default {
       modal: {
         detail: {
           machine: {},
+          editService: {},
           newService: {},
-          show: false
+          selected: [],
+          show: false,
         },
         addMachine: {
           machine: {},
           dropdown: {
             types: [
-              { text: "세탁기", value: "세탁기" },
-              { text: "건조기", value: "건조기" },
-              { text: "기타", value: "기타" }
-            ]
+              { text: '세탁기', value: '세탁기' },
+              { text: '건조기', value: '건조기' },
+              { text: '기타', value: '기타' },
+            ],
           },
-          show: false
+          show: false,
         },
         claimMachine: {
           machine: {},
           price: 0,
-          reason: "",
+          reason: '',
           loading: {
-            show: false
+            show: false,
           },
           finish: {
-            show: false
+            show: false,
           },
-          show: false
+          show: false,
         },
         deleteMachine: {
           machine: {},
-          show: false
+          show: false,
         },
         message: {
           show: false,
-          message: ""
-        }
-      }
+          message: '',
+        },
+        update: {
+          show: false,
+        },
+      },
     };
   },
   watch: {
-    "modal.claimMachine.loading.show": function(newValue) {
+    'modal.claimMachine.loading.show': function (newValue) {
       if (!newValue) {
         this.modal.claimMachine.machine = {};
         this.modal.claimMachine.price = 0;
-        this.modal.claimMachine.reason = "";
+        this.modal.claimMachine.reason = '';
       }
     },
-    "modal.deleteMachine.show": function(newValue) {
+    'modal.deleteMachine.show': function (newValue) {
       if (!newValue) {
         this.modal.deleteMachine.machine = {};
       }
-    }
+    },
   },
   computed: {
     company() {
       return this.$store.state.company;
-    }
+    },
   },
   methods: {
     isRunningMachine(time) {
-        if (!time) return false;
-        
-        if (moment(time) < moment(time)) return false;
-        
-        return true;
+      if (!time) return false;
+
+      if (moment(time) < moment(time)) return false;
+
+      return true;
     },
 
     editMachineModal(machine) {
       this.modal.detail.machine = machine;
       this.modal.detail.show = true;
     },
+
     addMachineModal() {
       this.modal.addMachine.machine = {};
       this.modal.addMachine.show = true;
@@ -476,15 +494,15 @@ export default {
     addMachine() {
       const self = this;
       const machine = this.modal.addMachine.machine;
-      machine.size = machine.size + "Kg";
+      machine.size += 'Kg';
 
       this.$store
-        .dispatch("addMachine", machine)
-        .then(response => {
+        .dispatch('addMachine', machine)
+        .then((response) => {
           // 장비등록 성공시
           self.modal.addMachine.show = false;
         })
-        .catch(err => {
+        .catch((err) => {
           // 장비등록 오류시
           const body = err.response.data;
 
@@ -492,14 +510,35 @@ export default {
         });
     },
 
-    editMachine(machine) {
-      this.$store
-        .dispatch("updateMachine", machine)
-        .then(response => {
-            
+    addService(service) {
+      const self = this;
+      const machineId = this.modal.detail.machine.id;
+
+      this.$store.dispatch('addService', { machineId, service })
+        .then((s) => {
+          self.modal.detail.machine.services.push(s);
         })
-        .catch(err => {
-          const data = err.response.data;
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+
+    deleteService() {
+      const checked = this.modal.detail.selected.sort((a, b) => b - a);
+
+      console.log(checked);
+    },
+
+    editMachine(machine) {
+      this.modal.update.show = false;
+
+      this.$store
+        .dispatch('updateMachine', machine)
+        .then((response) => {
+          console.log(response.data);
+        })
+        .catch((err) => {
+          console.log(err);
         });
     },
 
@@ -510,23 +549,20 @@ export default {
       const reason = this.modal.claimMachine.reason;
       this.modal.claimMachine.machine = {};
       this.modal.claimMachine.price = 0;
-      this.modal.claimMachine.reason = "";
+      this.modal.claimMachine.reason = '';
 
       this.modal.claimMachine.show = false;
       this.modal.claimMachine.loading.show = true;
 
-      console.log(machineId, price, reason);
       api
         .claimMachine(machineId, price, reason)
-        .then(response => {
-          return response.data;
-        })
-        .then(data => {
-          self.modal.message.message = "원격투입이 완료되었습니다";
+        .then(response => response.data)
+        .then((data) => {
+          self.modal.message.message = '원격투입이 완료되었습니다';
           self.modal.message.show = true;
           self.modal.claimMachine.loading.show = false;
         })
-        .catch(err => {
+        .catch((err) => {
           const body = err.response.data;
           self.modal.claimMachine.loading.show = false;
 
@@ -536,23 +572,22 @@ export default {
     },
 
     deleteMachine(machine) {
-      console.log(machine);
       const self = this;
       const removeTarget = machine;
       this.modal.deleteMachine.show = false;
 
       this.$store
-        .dispatch("deleteMachine", removeTarget)
-        .then(response => {
-          self.modal.message.message = "장치가 삭제되었습니다";
+        .dispatch('deleteMachine', removeTarget)
+        .then((response) => {
+          self.modal.message.message = '장치가 삭제되었습니다';
           self.modal.message.show = true;
         })
-        .catch(err => {
+        .catch((err) => {
           const body = err.response.data;
 
           console.log(body);
         });
-    }
-  }
+    },
+  },
 };
 </script>

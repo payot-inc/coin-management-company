@@ -12,7 +12,7 @@
                     <tr>
                         <td colspan="7" class="calendar_nav">
                             <div @click="changeMonth(-1)" class="calendar_arrow calendar_left"><i class="chevron left icon"></i></div>
-                            <label>{{ printMonth }}</label>
+                            <label>{{ printYearMonth }}</label>
                             <div v-on:click="changeMonth(1)" class="calendar_arrow calendar_right"><i class="chevron right icon"></i></div>
                         </td>
                     </tr>
@@ -30,7 +30,14 @@
                             <div class="day">
                                 {{ printDay(weekIndex, dayIndex) !== -1 ? printDay(weekIndex, dayIndex) : '' }}
                             </div>
-                            <div class="data"></div>
+                            <div class="data">
+                              <span v-if="printDay(weekIndex, dayIndex) !== -1">
+                                {{ sales.daily[printDay(weekIndex, dayIndex) - 1] ?
+                                  sales.daily[printDay(weekIndex, dayIndex) - 1].total.toLocaleString() :
+                                  0
+                                }}원
+                              </span>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -43,10 +50,10 @@
                     <dl class="total_box">
                         <dt>
                             <span class="icon"><i class="won sign icon"></i></span>
-                            <span class="text">9월 총 매출</span>
+                            <span class="text">{{ printMonth }}월 총 매출</span>
                         </dt>
                         <dd id="total">
-                            -
+                            {{ sales.total.toLocaleString() + '원' }}
                         </dd>
                     </dl>
                 </div>
@@ -54,10 +61,10 @@
                     <dl class="averge_box">
                         <dt>
                             <span class="icon"><i class="clock outline icon"></i></span>
-                            <span class="text">9월 평균 매출</span>
+                            <span class="text">{{ printMonth }}월 평균 매출</span>
                         </dt>
                         <dd id="averge">
-                            -
+                            {{ sales.average.toLocaleString() + '원' }}
                         </dd>
                     </dl>
                 </div>
@@ -65,10 +72,10 @@
                     <dl class="max_box">
                         <dt>
                             <span class="icon"><i class="chevron circle up icon"></i></span>
-                            <span class="text">8월 최대 매출일</span>
+                            <span class="text">{{ printMonth }}월 최대 매출일</span>
                         </dt>
                         <dd id="max">
-                            -
+                            {{ sales.max.day + '일' }}
                         </dd>
                     </dl>
                 </div>
@@ -76,10 +83,10 @@
                     <dl class="min_box">
                         <dt>
                             <span class="icon"><i class="chevron circle down icon"></i></span>
-                            <span class="text">9월 최대 매출일</span>
+                            <span class="text">{{ printMonth }}월 최소 매출일</span>
                         </dt>
                         <dd id="min">
-                            -
+                            {{ sales.min.day + '일' }}
                         </dd>
                     </dl>
                 </div>
@@ -90,57 +97,88 @@
 
 <script>
 import api from '../api.js';
-import Axios from 'axios';
 
 export default {
   data() {
     return {
       calendar: {
-        selectedMonth: moment().toDate()
+        selectedMonth: moment().toDate(),
       },
-      list: []
+      sales: {
+        total: 0,
+        average: 0,
+        max: 0,
+        min: 0,
+        daily: [],
+      },
     };
   },
+  mounted() {
+    this.getSalesData();
+  },
   computed: {
+    printYearMonth() {
+      return moment(this.calendar.selectedMonth).format('YYYY-MM');
+    },
+
     printMonth() {
-      return moment(this.calendar.selectedMonth).format("YYYY-MM");
+      return moment(this.calendar.selectedMonth).format('M');
     },
 
     totalWeek() {
       const totalDays = moment(this.calendar.selectedMonth).daysInMonth();
 
       return Math.ceil((this.startWeek() + totalDays) / 7);
-    }
+    },
   },
   methods: {
     startWeek() {
       return moment(this.calendar.selectedMonth)
-        .startOf("month")
+        .startOf('month')
         .weekday();
     },
     printDay(weekIndex, dayIndex) {
-        const day = weekIndex * 7 + dayIndex - this.startWeek() + 1;
-        return day <= 0 || day > moment(this.calendar.selectedMonth).daysInMonth() ? -1 : day;
+      const day = weekIndex * 7 + dayIndex - this.startWeek() + 1;
+      return day <= 0 || day > moment(this.calendar.selectedMonth).daysInMonth() ? -1 : day;
+    },
+    bindCalendar(weekIndex, dayIndex) {
+      const day = weekIndex * 7 + dayIndex - this.startWeek();
+      const data = this.sales.daily;
+
+      if (day < 0) return 0;
+      return `${data[day].total.toLocaleString()}원`;
     },
     changeMonth(month) {
-      this.calendar.selectedMonth = moment(this.calendar.selectedMonth).add(month, "month");
+      this.calendar.selectedMonth = moment(this.calendar.selectedMonth).add(month, 'month');
 
       this.getSalesData();
     },
     getSalesData() {
-        const self = this;
-        const start = moment(this.calendar.selectedMonth).startOf('month').toDate();
-        const end = moment(this.calendar.selectedMonth).endOf('month').toDate();
+      const self = this;
+      const start = moment(this.calendar.selectedMonth).startOf('month').toDate();
+      const end = moment(this.calendar.selectedMonth).endOf('month').toDate();
 
-        api.companySales(this.$store.state.company.id, start, end)
-            .then(response => {
-                const list = response.data;
+      const totalDay = moment(this.calendar.selectedMonth).daysInMonth();
 
-                self.list = list;
-            }).catch(err => {
-                console.log(err);
-            });
-    }
-  }
+      api.companySales(this.$store.state.company.id, start, end)
+        .then(({ data }) => {
+          const total = _.sumBy(data, o => Number(o.amount));
+          const dayGroup = _.groupBy(data, o => moment(o.payAt).format('D'));
+          const daily = _.times(totalDay, (day) => {
+            const nowDay = day + 1;
+            return {
+              day: nowDay,
+              total: _.sumBy(dayGroup[nowDay], o => Number(o.amount)),
+            };
+          });
+
+          self.sales.total = total;
+          self.sales.average = Math.round(total / totalDay);
+          self.sales.daily = daily;
+          self.sales.max = _.maxBy(daily, o => Number(o.total));
+          self.sales.min = _.minBy(daily, o => Number(o.total));
+        });
+    },
+  },
 };
 </script>
