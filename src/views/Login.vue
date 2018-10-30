@@ -108,10 +108,17 @@ export default {
           const self = this;
           this.$store.dispatch('login', { email: this.email, password: this.password })
             .then(company => {
+                console.log(company);
                 self.$router.push('/company');
             }).catch(err => {
-                console.log(err)
-                self.message = err;
+                if (!err.response) {
+                    self.modal.message.message = '서버에 접속할 수 없습니다';
+                } else if (err.response.body) {
+                    self.modal.message.message = err.response.body.error;
+                }
+
+                console.log(err);
+
                 self.modal.show = true;
             });
       },
